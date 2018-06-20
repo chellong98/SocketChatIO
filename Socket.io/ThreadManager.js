@@ -1,27 +1,43 @@
+var MongoClient = require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/";
+
+
 class ThreadManager {
 
     constructor() {
         this.list ={ 
-        'id': {
-            'socketA': {
-              
-            },
-            'socketB': {
-              
-            },
-            'message': [
-              {
-                'idAccount': 'adasdas',
-                'message':"tinnhan",
-                'time': ''
-              },
-               {
-                'idAccount': 'adasdas',
-                'message':"tinnhan"
-              }  
-            ]
+            'id': {
+                'socketA': {
+                  
+                },
+                'socketB': {
+                  
+                },
+                'message': [
+                  {
+                    'idAccount': 'adasdas',
+                    'message':"tinnhan",
+                    'time': ''
+                  },
+                   {
+                    'idAccount': 'adasdas',
+                    'message':"tinnhan"
+                  }  
+                ]
+            }
         }
-        }
+        this.db =null;
+        this.connectionDB();
+        
+    }
+    
+    connectionDB() {
+        MongoClient.connect(url, (err, db)=> {
+        
+          if (err) throw err;
+          var dbo = db.db("chatRealTimeReactNative");
+        this.db = dbo;
+        });
     }
     
     zpad(n, len) {
@@ -63,7 +79,6 @@ class ThreadManager {
     }
     
     Send(data) {
-        
         this.list[data.idThread].message.push({
             idAccount: data.idAccount,
             message: data.message,
@@ -85,6 +100,34 @@ class ThreadManager {
       }
       console.log('message')
       console.log(this.list[data.idThread])
+      
+          var message = {
+                  idThread:data.idThread ,
+                   idAccount: data.idAccount,
+                    message: data.message,
+                    time: new Date()
+          }
+          this.cacheDataToDB(message)
+      }
+    
+    cacheDataToDB(message) {
+        console.log(message)
+        if(this.db==null) return;
+
+        this.db.collection("messages").insertOne(message, function(err, res) {
+        if (err) throw err;
+        console.log("1 document inserted");
+        
+         });
+    }
+    
+    deleteAllDataToDB() {
+        this.db
+          .collection('messages')
+          .deleteMany({})
+          .then(function(result) {
+            
+          });
     }
 }
 
